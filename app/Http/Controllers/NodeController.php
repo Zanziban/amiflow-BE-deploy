@@ -103,6 +103,15 @@ class NodeController extends Controller
 
         $node->save();
 
-        return response()->json($node);
+        return response()->json([
+            'id' => (string) $node->id,
+            'code' => $node->kode_node,
+            'online' => (bool) $node->online,
+            'owner' => $node->nama_pemilik,
+            'totalUsers' => $node->jumlah_penghuni,
+            'waterUsageM3' => 0,
+            'peakFlow' => 0,
+            'valveOpen' => optional($node->controlValve)->status === 'active',
+        ]);
     }
 }
