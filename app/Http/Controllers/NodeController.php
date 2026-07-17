@@ -74,7 +74,7 @@ class NodeController extends Controller
             'jumlah_penghuni' => $data['jumlah_penghuni'],
             'password' => bcrypt($data['password']), // simpan ter-hash
             'aktif' => true,
-            'online' => false, // node baru: online setelah alat mengirim data
+            'online' => true, // node baru: online setelah alat mengirim data
         ]);
 
         // kembalikan dalam bentuk yang sama dengan index (cocok dengan entitas Node Flutter)
