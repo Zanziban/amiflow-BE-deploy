@@ -1,0 +1,38 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PenggunaanController;
+use App\Http\Controllers\KlasifikasiController;
+use App\Http\Controllers\PenjadwalanController;
+use App\Http\Controllers\GatewayController;
+use App\Http\Controllers\NodeController;
+use App\Http\Controllers\ValveController;
+use App\Http\Controllers\AuthController;
+
+
+
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+Route::post('/penggunaan', [PenggunaanController::class, 'store']);
+Route::get('/penggunaan', [PenggunaanController::class, 'index']);
+
+Route::get('/klasifikasi/{nodeId}/{tahun}/{bulan}', [KlasifikasiController::class, 'hitung']);
+
+Route::post('/penjadwalan', [PenjadwalanController::class, 'store']);
+Route::get('/penjadwalan/{nodeId}', [PenjadwalanController::class, 'index']);
+Route::get('/gateways', [GatewayController::class, 'index']);
+
+Route::get('/gateways/{gatewayId}/nodes', [NodeController::class, 'index']);
+Route::delete('/gateways/{id}', [GatewayController::class, 'destroy']);
+Route::post('/gateways', [GatewayController::class, 'store']);
+
+Route::delete('/nodes/{id}', [NodeController::class, 'destroy']);
+Route::post('/nodes', [NodeController::class, 'store']);
+
+Route::post('/nodes/{nodeId}/valve', [ValveController::class, 'update']);
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
