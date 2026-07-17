@@ -31,6 +31,7 @@ Route::post('/gateways', [GatewayController::class, 'store']);
 
 Route::delete('/nodes/{id}', [NodeController::class, 'destroy']);
 Route::post('/nodes', [NodeController::class, 'store']);
+Route::put('/nodes/{id}', [NodeController::class, 'update']);
 
 Route::post('/nodes/{nodeId}/valve', [ValveController::class, 'update']);
 
