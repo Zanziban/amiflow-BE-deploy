@@ -11,7 +11,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $data = $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
@@ -27,9 +27,9 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login berhasil',
-            'token'   => $token,
-            'user'    => [
-                'name'  => $user->name,
+            'token' => $token,
+            'user' => [
+                'name' => $user->name,
                 'email' => $user->email,
             ],
         ]);
@@ -40,5 +40,27 @@ class AuthController extends Controller
         // hapus token yang sedang dipakai
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logout berhasil']);
+    }
+    public function updateProfile(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'password' => 'nullable|string|min:8',
+        ]);
+        $user = $request->user();
+        $user->name = $data['name'];
+        if (!empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile berhasil diperbarui',
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+        ]);
+
     }
 }

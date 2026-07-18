@@ -37,3 +37,6 @@ Route::post('/nodes/{nodeId}/valve', [ValveController::class, 'update']);
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+Route::put('/profile', [AuthController::class, 'updateProfile'])
+    ->middleware('auth:sanctum');
