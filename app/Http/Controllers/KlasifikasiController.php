@@ -6,7 +6,6 @@ use App\Models\ControlValve;
 use App\Models\Node;
 use App\Models\Penggunaan;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class KlasifikasiController extends Controller
@@ -22,7 +21,9 @@ class KlasifikasiController extends Controller
 
     // ML baru boleh mengklasifikasi setelah data mencakup satu bulan penuh (~30 hari kalender berbeda),
     // dengan tetap menyimpan histori harian dari hari-hari sebelumnya.
-    const MINIMAL_HARI_DATA = 30;
+    //const MINIMAL_HARI_DATA = 30;
+
+    const MINIMAL_CAKUPAN_DATA = 0.90;
 
     public function hitung($nodeId, $tahun, $bulan)
     {
@@ -50,15 +51,23 @@ class KlasifikasiController extends Controller
         // pembacaan pertamanya tepat jam 00:00:00, sehingga selisih waktu literal
         // hampir selalu sedikit di bawah 30 hari meski tanggal kalendernya sudah genap 30.
         $jumlahHariUnik = $data->pluck('recorded_at')
-            ->map(fn ($t) => Carbon::parse($t)->toDateString())
+            ->map(fn($t) => Carbon::parse($t)->toDateString())
             ->unique()
             ->count();
 
-        if ($jumlahHariUnik < self::MINIMAL_HARI_DATA) {
+        $jumlahHariDalamBulan = Carbon::create($tahun, $bulan, 1)->daysInMonth;
+
+        $cakupanData = $jumlahHariUnik / $jumlahHariDalamBulan;
+
+        if ($cakupanData < self::MINIMAL_CAKUPAN_DATA) {
             return response()->json([
-                'message'      => 'ML belum aktif, data baru mencakup ' . $jumlahHariUnik . ' hari (butuh ' . self::MINIMAL_HARI_DATA . ' hari)',
+                'message' => 'ML belum aktif, data hanya mencakup '
+                    . $jumlahHariUnik . ' dari '
+                    . $jumlahHariDalamBulan . ' hari dalam bulan ini',
                 'hari_terekam' => $jumlahHariUnik,
-                'kategori'     => null,
+                'hari_dalam_bulan' => $jumlahHariDalamBulan,
+                'cakupan_data' => round($cakupanData * 100, 2),
+                'kategori' => null,
             ], 202);
         }
 

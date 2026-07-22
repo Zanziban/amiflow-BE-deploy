@@ -24,7 +24,7 @@ class NodeController extends Controller
                     $total = $readings->max('volume') - $readings->min('volume');
                     $mulai = Carbon::parse($readings->first()->recorded_at);
                     $akhir = Carbon::parse($readings->last()->recorded_at);
-                    $hari = max($mulai->diffInDays($akhir), 1);
+                    $hari  = max($mulai->diffInDays($akhir), 1);
                     $usageHarian = $total / $hari;
                     $peak = $readings->max('flowrate');
                 }
@@ -32,14 +32,14 @@ class NodeController extends Controller
                 $valveOpen = optional($node->controlValve)->status === 'active';
 
                 return [
-                    'id' => (string) $node->id,
-                    'code' => $node->kode_node,
-                    'online' => (bool) $node->online,
-                    'owner' => $node->nama_pemilik,
-                    'totalUsers' => $node->jumlah_penghuni,
+                    'id'           => (string) $node->id,
+                    'code'         => $node->kode_node,
+                    'online'       => (bool) $node->online,
+                    'owner'        => $node->nama_pemilik,
+                    'totalUsers'   => $node->jumlah_penghuni,
                     'waterUsageM3' => round($usageHarian, 2),
-                    'peakFlow' => round($peak, 2),
-                    'valveOpen' => $valveOpen,
+                    'peakFlow'     => round($peak, 2),
+                    'valveOpen'    => $valveOpen,
                 ];
             });
 
@@ -60,58 +60,65 @@ class NodeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'gateway_id' => 'required|exists:gateways,id',
-            'kode_node' => 'required|string|unique:nodes,kode_node',
-            'nama_pemilik' => 'required|string',
+            'gateway_id'      => 'required|exists:gateways,id',
+            'kode_node'       => 'required|string|unique:nodes,kode_node',
+            'nama_pemilik'    => 'required|string',
             'jumlah_penghuni' => 'required|integer|min:1',
-            'password' => 'required|string|min:4',
+            'password'        => 'required|string|min:4',
         ]);
 
         $node = Node::create([
-            'gateway_id' => $data['gateway_id'],
-            'kode_node' => $data['kode_node'],
-            'nama_pemilik' => $data['nama_pemilik'],
+            'gateway_id'      => $data['gateway_id'],
+            'kode_node'       => $data['kode_node'],
+            'nama_pemilik'    => $data['nama_pemilik'],
             'jumlah_penghuni' => $data['jumlah_penghuni'],
-            'password' => bcrypt($data['password']), // simpan ter-hash
-            'aktif' => true,
-            'online' => true, // node baru: online setelah alat mengirim data
+            'password'        => bcrypt($data['password']), // simpan ter-hash
+            'aktif'           => true,
+            'online'          => false, // node baru: online setelah alat mengirim data
         ]);
 
         // kembalikan dalam bentuk yang sama dengan index (cocok dengan entitas Node Flutter)
         return response()->json([
-            'id' => (string) $node->id,
-            'code' => $node->kode_node,
-            'online' => (bool) $node->online,
-            'owner' => $node->nama_pemilik,
-            'totalUsers' => $node->jumlah_penghuni,
+            'id'           => (string) $node->id,
+            'code'         => $node->kode_node,
+            'online'       => (bool) $node->online,
+            'owner'        => $node->nama_pemilik,
+            'totalUsers'   => $node->jumlah_penghuni,
             'waterUsageM3' => 0,
-            'peakFlow' => 0,
-            'valveOpen' => false,
+            'peakFlow'     => 0,
+            'valveOpen'    => false,
         ], 201);
     }
-    public function update(Request $request, $id)
+
+    public function update(Request $request, string $id)
     {
-        $validated = $request->validate([
-            'nama_pemilik' => 'required|string|max:255',
+        $data = $request->validate([
+            'nama_pemilik'    => 'required|string',
             'jumlah_penghuni' => 'required|integer|min:1',
         ]);
 
-        $node = Node::findOrFail($id);
+        $node = Node::find($id);
 
-        $node->nama_pemilik = $validated['nama_pemilik'];
-        $node->jumlah_penghuni = $validated['jumlah_penghuni'];
+        if (!$node) {
+            return response()->json([
+                'message' => 'Node tidak ditemukan'
+            ], 404);
+        }
 
-        $node->save();
+        $node->update([
+            'nama_pemilik'    => $data['nama_pemilik'],
+            'jumlah_penghuni' => $data['jumlah_penghuni'],
+        ]);
 
         return response()->json([
-            'id' => (string) $node->id,
-            'code' => $node->kode_node,
-            'online' => (bool) $node->online,
-            'owner' => $node->nama_pemilik,
-            'totalUsers' => $node->jumlah_penghuni,
+            'id'           => (string) $node->id,
+            'code'         => $node->kode_node,
+            'online'       => (bool) $node->online,
+            'owner'        => $node->nama_pemilik,
+            'totalUsers'   => $node->jumlah_penghuni,
             'waterUsageM3' => 0,
-            'peakFlow' => 0,
-            'valveOpen' => optional($node->controlValve)->status === 'active',
+            'peakFlow'     => 0,
+            'valveOpen'    => optional($node->controlValve)->status === 'active',
         ]);
     }
 }
